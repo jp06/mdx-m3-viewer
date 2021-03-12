@@ -13,6 +13,7 @@
     "types": [
       "node"
     ],
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "declaration": true,
   }
 }
