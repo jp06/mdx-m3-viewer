@@ -502,3 +502,39 @@ canvas.clientHeight = 512;
 canvas.style.width = '512px';
 canvas.style.height = '512px';
 ```
+
+#### Variable frames per second
+
+`ModelViewer.update()` and `ModelViewer.updateAndRender()` have an optional `dt` argument.
+
+`dt` controls how much time in miliseconds to advance the animations.
+
+By default, `dt` is set for 60FPS, or `1000 / 60`.
+
+If a client runs on a >60Hz monitor, and uses `requestAnimationFrame` for its main loop as it should, animations will run faster than they should.
+
+In other cases, a client might have too many things rendering and it slows down, causing animations to go slow motion.
+
+To support a variable FPS while keeping the same animation speed, `dt` can be controlled dynamically, for example:
+
+```javascript
+ let lastTime = performance.now();
+
+(function step() {
+  requestAnimationFrame(step);
+
+  let now = performance.now();
+
+  // The faster the FPS, the lower dt will be.
+  // Twice the FPS? half the dt.
+  // There are more frames per second, so every frame advances the animation less.
+  // And the other way is also true.
+  // Half the FPS? twice the dt.
+  // There are less frames per second, so every frame advances the animation more.
+  let dt = now - lastTime;
+
+  lastTime = now;
+
+  viewer.updateAndRender(dt);
+}());
+```
