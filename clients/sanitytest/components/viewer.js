@@ -41,7 +41,7 @@ class Viewer extends Component {
       }
     });
 
-    viewer.addHandler(ModelViewer.default.viewer.handlers.mdx, localOrHive, false);
+    viewer.addHandler(ModelViewer.default.viewer.handlers.mdx, localOrHive, true);
     viewer.addHandler(ModelViewer.default.viewer.handlers.blp);
     viewer.addHandler(ModelViewer.default.viewer.handlers.dds);
     viewer.addHandler(ModelViewer.default.viewer.handlers.tga);
@@ -65,10 +65,21 @@ class Viewer extends Component {
         this.sphereModel = model;
       });
 
+    let lastTime = performance.now();
+
     let step = () => {
       requestAnimationFrame(step);
 
-      viewer.updateAndRender();
+      let now = performance.now();
+      let dt = now - lastTime;
+
+      lastTime = now;
+
+      if (this.controls.animationToggle.clicked) {
+        viewer.updateAndRender(0);
+      } else {
+        viewer.updateAndRender(dt);
+      }
 
       if (this.visibleTest) {
         let instance = this.visibleTest.instance;
@@ -82,9 +93,9 @@ class Viewer extends Component {
             if (sequence === instance.model.sequences.length) {
               sequence = 0;
             }
-          }
 
-          this.setSequence(sequence);
+            this.setSequence(sequence);
+          }
         }
 
         this.controls.frame(instance.frame);
@@ -274,7 +285,7 @@ class Viewer extends Component {
     if (index === -1) {
       this.orbitCamera.instance = null;
     } else {
-      this.orbitCamera.applyInstanceCamera(this.visibleTest.instance, index);
+      this.orbitCamera.applyInstanceCamera(this.visibleTest.instance);
     }
   }
 

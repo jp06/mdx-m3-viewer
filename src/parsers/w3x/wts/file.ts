@@ -51,9 +51,39 @@ export default class War3MapWts {
     let buffer = '';
 
     for (let [key, value] of this.stringMap) {
-      buffer += `STRING ${key}\n{\n${value}\n}\n`;
+      buffer += `STRING ${key}\r\n{\r\n${value}\r\n}\r\n\r\n`;
     }
 
     return buffer;
+  }
+
+  /**
+   * Get the string at the given index.
+   * 
+   * Strings in the form "TRIGSTR_nnn" are also supported.
+   */
+  getString(index: number | string) {
+    if (typeof index === 'string') {
+      if (index.startsWith('TRIGSTR_')) {
+        return this.stringMap.get(parseInt(index.slice(8)));
+      }
+    } else {
+      return this.stringMap.get(index);
+    }
+  }
+
+  /**
+   * Set the string at the given index.
+   * 
+   * Strings in the form "TRIGSTR_nnn" are also supported.
+   */
+  setString(index: number | string, value: string) {
+    if (typeof index === 'string') {
+      if (index.startsWith('TRIGSTR_')) {
+        this.stringMap.set(parseInt(index.slice(8)), value);
+      }
+    } else {
+      this.stringMap.set(index, value);
+    }
   }
 }

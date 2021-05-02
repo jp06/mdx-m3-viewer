@@ -1,18 +1,44 @@
 import War3Map from '../../../parsers/w3x/map';
-import TriggerData from '../../../parsers/w3x/wtg/triggerdata';
+import { TriggerData } from '../../../parsers/w3x/wtg/triggerdata';
 import CustomTextTrigger from '../../../parsers/w3x/wct/customtexttrigger';
+import parseWtg from './parsewtg';
 import WeuData from './data';
 import { processTrigger } from './processing';
 import { convertTrigger } from './conversions';
 
 export default function convertWeu(map: War3Map, customTriggerData: TriggerData, weTriggerData: TriggerData) {
+  let wts;
   let wtg;
   let wct;
-  let wts;
+
+  // Try to read the string table.
+  try {
+    wts = map.readStringTable();
+  } catch (e) {
+    return { ok: false, error: `Failed to read the string table file: ${e}` };
+  }
+
+  if (!wts) {
+    return { ok: false, error: `The string table file doesn't exist` };
+  }
+
+  // Try to add function signatures from the map script.
+  // This handles the case of injected libraries, mostly seen in YDWE maps.
+  let scriptFile = map.getScriptFile();
+  if (scriptFile && scriptFile.name.endsWith('.j')) {
+    try {
+      customTriggerData.addJassFunctions(scriptFile.text());
+    } catch (e) {
+
+    }
+  }
+
+  let data = new WeuData(customTriggerData, wts);
 
   // Try to read the triggers file using the custom trigger data.
+  // This will also try to analyze unknown signatures if such exist.
   try {
-    wtg = map.readTriggers(customTriggerData);
+    wtg = parseWtg(map, customTriggerData, data);
   } catch (e) {
     return { ok: false, error: `Failed to read the triggers file: ${e}` };
   }
@@ -32,18 +58,6 @@ export default function convertWeu(map: War3Map, customTriggerData: TriggerData,
     return { ok: false, error: `The custom text triggers file doesn't exist` };
   }
 
-  // Try to read the string table.
-  try {
-    wts = map.readStringTable();
-  } catch (e) {
-    return { ok: false, error: `Failed to read the string table file: ${e}` };
-  }
-
-  if (!wts) {
-    return { ok: false, error: `The string table file doesn't exist` };
-  }
-
-  let data = new WeuData(customTriggerData, wts);
   let triggers = wtg.triggers;
   let customTextTriggers = wct.triggers;
   let mapHeader = wct.trigger;

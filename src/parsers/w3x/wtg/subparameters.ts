@@ -1,7 +1,7 @@
 import BinaryStream from '../../../common/binarystream';
 import { byteLengthUtf8 } from '../../../common/utf8';
 import Parameter from './parameter';
-import TriggerData from './triggerdata';
+import { FunctionSignature, TriggerData } from './triggerdata';
 
 /**
  * A function call in an expression.
@@ -14,14 +14,24 @@ export default class SubParameters {
 
   load(stream: BinaryStream, version: number, triggerData: TriggerData) {
     this.type = stream.readInt32();
+
+    if (this.type < 0 || this.type > 3) {
+      throw new Error(`SubParameters: Bad type: ${this.type}`);
+    }
+
     this.name = stream.readNull();
+
+    if (this.name.length === 0) {
+      throw new Error(`SubParameters: Empty name`);
+    }
+
     this.beginParameters = stream.readInt32();
 
     if (this.beginParameters) {
       let signature = triggerData.getFunction(this.type, this.name);
 
       if (!signature) {
-        throw new Error(`SubParameters ${this.name}'s signature is unknown`);
+        throw new Error(`SubParameters "${this.name}:${this.type}": Unknown signature`);
       }
 
       let args = signature.args;

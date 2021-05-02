@@ -377,12 +377,11 @@ export function convertParameter(data: WeuData, parameter: Parameter, dataType: 
     // scriptcode needs to be converted as-is, and doesn't need quotes.
     if (baseType === 'string' && dataType !== 'scriptcode') {
       // Inline string table entries.
-      if (value.startsWith('TRIGSTR')) {
-        let index = parseInt(value.slice(8));
-        let entry = data.stringTable.stringMap.get(index)
+      if (value.startsWith('TRIGSTR') && data.stringTable) {
+        let string = data.stringTable.getString(value);
 
-        if (entry) {
-          return `"${entry.replace(/\r\n/g, '\\r\n')}"`;
+        if (string !== undefined) {
+          return `"${string.replace(/\r\n/g, '\\r\n')}"`;
         } else {
           data.change('missingstring', 'Entry not found in the string table', value);
         }
